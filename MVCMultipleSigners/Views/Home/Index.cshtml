@@ -1,0 +1,31 @@
+﻿@using Groupdocs.Web.UI.Signature
+@model MVCMultipleSigners.Models.SignDocument
+
+<div style="background-color: silver;">
+    <div id="groupdocs-signature"></div>
+</div>
+
+@(Html.SignatureDocument("#groupdocs-signature")
+    .DocumentGuid(@Model.DocumentGuid)
+    .RecipientGuid(@Model.RecipientGuid)
+)
+
+@section scripts
+{
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var containerElement = $("#groupdocs-signature");
+            containerElement.on("documentSigned.groupdocs",
+                function(e, result) {
+                    if (!result.document.signedFromAll) {
+                        var nextRecipients = $.grep(result.document.recipients, function (item) {
+                            return item.signed == false;
+                        });
+                        console.log(nextRecipients);
+                        if (nextRecipients.length > 0)
+                            containerElement.groupdocsSignature("sign", nextRecipients[0].guid);
+                    }
+                });
+        });
+    </script>
+}
