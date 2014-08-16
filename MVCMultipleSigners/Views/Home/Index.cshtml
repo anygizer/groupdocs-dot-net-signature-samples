@@ -1,7 +1,22 @@
 ﻿@using Groupdocs.Web.UI.Signature
+@using Groupdocs.Data
 @model MVCMultipleSigners.Models.SignDocument
 
-<div style="background-color: silver;">
+<div>
+    <h3>Document</h3>
+    <a href="~/?docGuid=@Model.DocumentGuid">Link to the current document</a>
+    @if (@Model.Recipients != null && @Model.Recipients.Count > 0) {
+    <h4>Recipients</h4>
+    <ul>
+        @foreach (SignatureDocumentRecipient recipient in Model.Recipients)
+        {
+        <li><a href="~/?docGuid=@Model.DocumentGuid&recGuid=@recipient.Guid">@recipient.FirstName @recipient.LastName</a> (@(recipient.Signed ? "signed" : "pending"))</li>
+        }
+    </ul>
+    }
+</div>
+
+<div style="background-color: silver;position: relative;height: 100%">
     <div id="groupdocs-signature"></div>
 </div>
 
@@ -13,10 +28,20 @@
 @section scripts
 {
     <script type="text/javascript">
-        $(document).ready(function() {
+        function getParameterByName(name) {
+            var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+            return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+        }
+
+        $(document).ready(function () {
+            // Preserve this functionality only on the main doc page,
+            // so there an option for every recipient to sign will still be abailable.
+            // Dedicated recipients pages will be restricted only for one person.
+            if (getParameterByName("recGuid")) return;
+
             var containerElement = $("#groupdocs-signature");
             containerElement.on("documentSigned.groupdocs",
-                function(e, result) {
+                function (e, result) {
                     if (!result.document.signedFromAll) {
                         var nextRecipients = $.grep(result.document.recipients, function (item) {
                             return item.signed == false;

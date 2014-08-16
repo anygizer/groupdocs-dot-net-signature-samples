@@ -2,6 +2,7 @@
 Dependencies/
 */App_Data/temp/
 */App_Data/groupdocs.signature.documents.json
+*/App_Data/sample_signed.pdf
 */App_Data/vs.bin
 
 ## Ignore Visual Studio temporary files, build results, and

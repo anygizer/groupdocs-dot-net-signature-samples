@@ -3,6 +3,7 @@ using Groupdocs.Data.Signature;
 using Groupdocs.Web.UI.Signature;
 using Groupdocs.Web.UI.Signature.Services;
 using MVCMultipleSigners.Models;
+using Groupdocs.Data;
 
 namespace MVCMultipleSigners.Controllers
 {
@@ -13,7 +14,34 @@ namespace MVCMultipleSigners.Controllers
 
         public ActionResult Index()
         {
-            var document = GroupdocsSignature.CreateDocumentForSigning("sample.pdf", "sample_signed.pdf");
+            var docGuid = Request.QueryString["docGuid"];
+            string recGuid = Request.QueryString["recGuid"];
+
+            SignDocument signDocument;
+            if (!string.IsNullOrEmpty(docGuid) && !string.IsNullOrEmpty(recGuid))
+            {
+                signDocument = new SignDocument { DocumentGuid = docGuid, RecipientGuid = recGuid };
+                return View(signDocument);
+            }
+
+            SignatureDocument document;
+            if (!string.IsNullOrEmpty(docGuid))
+            {
+                document = GroupdocsSignature.GetDocument(docGuid);
+                foreach(SignatureDocumentRecipient recip in document.SignatureDocumentRecipients)
+                {
+                    recGuid = recip.Guid;
+                    if (!recip.Signed) break;
+                }
+                signDocument = new SignDocument {
+                    DocumentGuid = docGuid,
+                    RecipientGuid = recGuid, // to show the doc, because it remembers last signed recipient ID
+                                             // and show popup warning to wait all signers
+                    Recipients = document.SignatureDocumentRecipients };
+                return View(signDocument);
+            }
+
+            document = GroupdocsSignature.CreateDocumentForSigning("sample.pdf", "sample_signed.pdf");
 
             var recipient = document.AddRecipient("John", "Doe");
             var recipient1 = document.AddRecipient("Richard", "Roe");
@@ -28,7 +56,12 @@ namespace MVCMultipleSigners.Controllers
                 null);
             document.AssignFieldToRecipient(field1.Guid, recipient1.Guid);
 
-            var signDocument = new SignDocument {DocumentGuid = document.Guid, RecipientGuid = recipient1.Guid};
+            signDocument = new SignDocument
+            {
+                DocumentGuid = document.Guid,
+                RecipientGuid = recipient.Guid,
+                Recipients = document.SignatureDocumentRecipients
+            };
             return View(signDocument);
         }
 
